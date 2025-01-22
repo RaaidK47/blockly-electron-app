@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockly in Electron</title>
+    <script src="../node_modules/blockly/blockly.min.js"></script> <!-- Local Blockly Script -->
+    
+    <script src="renderer.js" defer></script> <!-- Your renderer.js file -->
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #blocklyDiv {
+            width: 100%;
+            height: 75%; /* Adjust height to give space for Blockly */
+        }
+        #controls {
+            height: 25%; /* Control section height */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f3f3f3;
+            border-top: 1px solid #ddd;
+        }
+        #compileButton, #runButton {
+            width: 200px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+        }
+        #compileButton {
+            background-color: #007BFF;
+            color: white;
+        }
+        #runButton {
+            background-color: #28a745;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="blocklyDiv"></div>
+    <div id="controls">
+        <button id="compileButton">Compile to CSV</button>
+        <div class="separator"></div>
+        <button id="runButton">Run Script</button>
+    </div>
+</body>
+</html>
