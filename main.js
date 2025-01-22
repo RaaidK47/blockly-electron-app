@@ -25,8 +25,8 @@ app.on('window-all-closed', () => {
     }
 });
 
-// Handle the execCommand request from the renderer
-ipcMain.handle('exec-command', async (event, command) => {
+// Handle the command execution in the main process
+ipcMain.handle('execute-command', async (event, command) => {
     return new Promise((resolve, reject) => {
         exec(command, (error, stdout, stderr) => {
             if (error) {
@@ -34,10 +34,10 @@ ipcMain.handle('exec-command', async (event, command) => {
                 return;
             }
             if (stderr) {
-                reject(`stderr: ${stderr}`);
+                reject(`Standard Error: ${stderr}`);
                 return;
             }
-            resolve(stdout);  // Return the command output
+            resolve(stdout);
         });
     });
 });

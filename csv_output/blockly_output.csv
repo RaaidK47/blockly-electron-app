@@ -1,2 +1,3 @@
-"Blockly Logic"
-"<xml xmlns="https://developers.google.com/blockly/xml"><variables><variable id="gaC^z//P$IMNeJnXL=1Y">i</variable></variables><block type="controls_for" id="ZJy;FB;Qqu6r?P}IQ0zF" x="270" y="110"><field name="VAR" id="gaC^z//P$IMNeJnXL=1Y">i</field></block><block type="math_arithmetic" id="xCOLA~qOYfh,(bfn0MDU" x="370" y="270"><field name="OP">ADD</field></block></xml>"
+Block Type,Operation,Parameter A,Parameter B,From,To,Increment,Table Name
+logic_compare,EQ,0,0
+fetch_from_database,,,,,,,test_table

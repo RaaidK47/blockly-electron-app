@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { contextBridge } = require('electron');
+const { contextBridge , ipcRenderer} = require('electron');
 
 contextBridge.exposeInMainWorld('electron', {
     saveCSV: (csvContent, filePath) => {
@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('electron', {
             });
         });
     },
+
     ensureDirectoryExists: (dirPath) => {
         return new Promise((resolve, reject) => {
             if (!fs.existsSync(dirPath)) {
@@ -29,5 +30,8 @@ contextBridge.exposeInMainWorld('electron', {
             }
         });
     },
+
+    execCommand: (command) => ipcRenderer.invoke('execute-command', command),
+
     getPath: () => path // Expose the entire path module
 });
