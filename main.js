@@ -10,6 +10,7 @@ function createWindow() {
             nodeIntegration: false,  // Disable nodeIntegration for security
             contextIsolation: true,  // Enable context isolation for security
             preload: path.join(__dirname, 'preload.js'),  // Preload script path
+            sandbox: false // Temporarily disable sandboxing
         }
     });
 
@@ -17,6 +18,12 @@ function createWindow() {
 }
 
 app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
+});
 
 // Handle the execCommand request from the renderer
 ipcMain.handle('exec-command', async (event, command) => {

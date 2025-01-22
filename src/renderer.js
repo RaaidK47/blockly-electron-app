@@ -1,8 +1,8 @@
 // const path = require('path');
 // const fs = require('fs');
 
-// // Define output directory and python script path
-// const OUTPUT_DIR = path.join(__dirname, 'output');
+// Define output directory and python script path
+const OUTPUT_DIR = './csv_output';
 // const PYTHON_SCRIPT = path.join(__dirname, 'process_csv.py');
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -51,29 +51,34 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+     // Function to generate CSV from Blockly workspace
+     function saveBlocklyToCSV() {
+        const xml = Blockly.Xml.workspaceToDom(workspace); // Get XML from workspace
+        const logic = Blockly.Xml.domToText(xml); // Convert to text
+        
+        // Convert to CSV format (adjust this as needed)
+        const csvContent = `"Blockly Logic"\n"${logic}"`;
+
+        // Ensure output directory exists
+        window.electron.ensureDirectoryExists(OUTPUT_DIR)
+            .then(() => {
+                const filePath = window.electron.getPath().join(OUTPUT_DIR, 'blockly_output.csv'); // Use the exposed path module
+                return window.electron.saveCSV(csvContent, filePath);
+            })
+            .then((message) => {
+                console.log(message);
+                alert('CSV file saved successfully!');
+            })
+            .catch((err) => {
+                console.error('Error saving CSV:', err);
+                alert('Error saving CSV file.');
+            });
+    }
+
+
     // Handle Compile Button Click
     compileButton.addEventListener('click', () => {
-        const xml = Blockly.Xml.workspaceToDom(workspace);
-        const logic = Blockly.Xml.domToText(xml);
-
-        const csvContent = `"Blockly Logic"\n"${logic}"`;
-        const filePath = './output/blockly_output.csv';
-
-        // Create 'output' directory if not exists
-        if (!fs.existsSync('./output')) {
-            fs.mkdirSync('./output');
-        }
-
-        // Save logic as CSV file
-        fs.writeFile(filePath, csvContent, (err) => {
-            if (err) {
-                console.error('Failed to save CSV:', err);
-                alert('Error: Unable to save the file.');
-            } else {
-                console.log('CSV file saved at:', filePath);
-                alert(`CSV file saved to: ${filePath}`);
-            }
-        });
+        saveBlocklyToCSV();
     });
 
     // Handle Run Button Click (Execute Python Script)

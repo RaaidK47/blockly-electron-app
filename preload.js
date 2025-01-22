@@ -1,6 +1,33 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const fs = require('fs');
+const path = require('path');
+const { contextBridge } = require('electron');
 
-// Expose a safe API for the renderer to run commands
 contextBridge.exposeInMainWorld('electron', {
-    execCommand: (command) => ipcRenderer.invoke('exec-command', command)
+    saveCSV: (csvContent, filePath) => {
+        return new Promise((resolve, reject) => {
+            fs.writeFile(filePath, csvContent, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(`File saved at ${filePath}`);
+                }
+            });
+        });
+    },
+    ensureDirectoryExists: (dirPath) => {
+        return new Promise((resolve, reject) => {
+            if (!fs.existsSync(dirPath)) {
+                fs.mkdir(dirPath, { recursive: true }, (err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            } else {
+                resolve();
+            }
+        });
+    },
+    getPath: () => path // Expose the entire path module
 });
