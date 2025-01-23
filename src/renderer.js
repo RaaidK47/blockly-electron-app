@@ -1,10 +1,42 @@
-// const path = require('path');
-// const fs = require('fs');
-
 // Define output directory and python script path
 const OUTPUT_DIR = './csv_output';
-// const PYTHON_SCRIPT = path.join(__dirname, 'process_csv.py');
 
+function connectWebSocket() {
+    socket = new WebSocket('ws://localhost:8765');
+
+    socket.addEventListener('open', () => {
+        console.log('Connected to Python WebSocket server');
+    });
+
+    socket.addEventListener('message', (event) => {
+        console.log('Message from server:', event.data);
+
+        const messageContainer = document.getElementById('messages');
+        const messageElement = document.createElement('div');
+        messageElement.textContent = `From Python: ${event.data}`;
+        messageContainer.appendChild(messageElement);
+    });
+
+    socket.addEventListener('error', (event) => {
+        console.error('WebSocket error:', event);
+    });
+
+    socket.addEventListener('close', (event) => {
+        console.log('WebSocket connection closed', event);
+
+        // Retry logic if connection fails
+        if (retries < maxRetries) {
+            retries++;
+            console.log(`Retrying connection... (Attempt ${retries})`);
+            setTimeout(connectWebSocket, retryDelay);
+        } else {
+            console.log('Max retry attempts reached');
+        }
+    });
+}
+
+// Try to connect when the renderer script is loaded
+window.addEventListener('load', connectWebSocket);
 
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -124,6 +156,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
 
+
     // Handle Compile Button Click
     compileButton.addEventListener('click', () => {
         saveBlocklyToCSV();
@@ -133,11 +166,11 @@ window.addEventListener('DOMContentLoaded', () => {
     // Handle Run Button Click (Execute Python Script)
     runButton.addEventListener('click', () => {
         const command = 'python ./backend/process_csv.py';
-    
+
+
         window.electron.execCommand(command)
             .then(stdout => {
                 console.log('Python Script Output:', stdout);
-
 
                 // alert(`Python Script Executed Successfully:\n${stdout}`);
                 alert(`Python Script Executed Successfully`);

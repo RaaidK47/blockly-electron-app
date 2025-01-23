@@ -22,17 +22,36 @@ def connect_to_database():
         return None
 
 # Function to process the CSV file
-def process_csv():
+async def process_csv():
     # Path to the CSV file
     file_path = './csv_output/blockly_output.csv'
     output = []
+
+    uri = "ws://localhost:8765"
+            
+    message = "Hello, the Python Process is Completed"
+    
+    try:
+        async with websockets.connect(uri) as websocket:
+            # Send a message to the WebSocket server
+            if websocket:
+                # print("Connected to WebSocket server")
+                await websocket.send("Message Sent from Process_CSV.py")
+            else:
+                print("Failed to connect to WebSocket server")
+
+    except Exception as e:
+        print(f"Error connecting to WebSocket server: {e}")
+        output.append(f"Error connecting to WebSocket server: {e}")
+
 
     try:
 
         db_connection = connect_to_database()
         db_cursor = db_connection.cursor() if db_connection else None
-        if(db_cursor):
-            print("Connected to database successfully")
+
+        # if(db_cursor):
+        #     print("Connected to database successfully")
 
         with open(file_path, 'r') as file:
             reader = csv.DictReader(file)  # Read the CSV file as a dictionary
@@ -72,21 +91,27 @@ def process_csv():
                     elif block_type == 'controls_for':
                         result = handle_for_loop(fromValue, toValue, increment)
                         output.append(f"For Loop Result: {result}")
-
+                        
+                    
 
                 except Exception as e:
                     output.append(f"Error processing block '{block_type}': {e}")
+        
 
             if db_cursor:
                 db_cursor.close()
             if db_connection:
                 db_connection.close()
 
+
+
     except Exception as e:
         print(f"Error processing CSV: {e}")
         output.append(f"Error processing CSV: {e}")
 
     display_output(output)
+
+    
 
 # Handle math operations
 def handle_math_operation(operation, a, b):
@@ -170,11 +195,30 @@ def handle_for_loop(start, end, increment):
     except Exception as e:
         return f"For Loop error: {e}"
 
+def center_window(root, width, height):
+    # Get screen width and height
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    # Calculate x and y coordinates for the Tkinter window
+    x = (screen_width // 2) - (width // 2)
+    y = (screen_height // 2) - (height // 2)
+
+    # Set the geometry of the window
+    root.geometry(f"{width}x{height}+{x}+{y}")
+
 # Tkinter GUI for displaying output
 def display_output(output):
 
     root = tk.Tk()
     root.title("Blockly Execution Results")
+
+        # Define window size
+    window_width = 550
+    window_height = 400
+
+    # Center the window
+    center_window(root, window_width, window_height)
 
     text_area = tk.Text(root, wrap=tk.WORD, width=60, height=20)
     text_area.pack(pady=10, padx=10)
@@ -189,4 +233,5 @@ def display_output(output):
 
 
 if __name__ == "__main__":
-    process_csv()
+    # asyncio.run(process_csv())
+    asyncio.get_event_loop().run_until_complete(process_csv())
