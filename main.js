@@ -58,12 +58,40 @@ function startWebSocketServer() {
 
         // Handle incoming messages from the client
         ws.on('message', (message) => {
+
             console.log(`Received message: ${message}`);
-            
-            // Forward the WebSocket message to the renderer process
-            if (mainWindow) {
-                mainWindow.webContents.send('ws-message', message);
+
+            if (message instanceof Uint8Array) {
+                // Decode the Uint8Array to a string
+                message = new TextDecoder().decode(message);
+                // console.log('WebSocket Message:', decodedMessage);
             }
+
+            // Ensure message is a string before attempting to match
+            if (typeof message === 'string') {
+                try {
+                    // Parse the message and extract blockId and status
+                    const regex = /BlockID:\s*(.+?),\s*Block Status:\s*(success|error)/;
+                    const match = message.match(regex);
+
+                    if (match) {
+                        const blockId = match[1]; // Block ID
+                        const status = match[2];  // Block Status
+
+                        // Send the block status to the main window (renderer process)
+                        mainWindow.webContents.send('block-status', { blockId, status });
+                    } else {
+                        // If the message doesn't match the expected format, log a warning
+                        console.warn('Invalid message format:', message);
+                    }
+                } catch (error) {
+                    console.error('Error parsing message:', error);
+                }
+            } else {
+                // Log an error if the message is not a string
+                console.error('Received message is not a string:', message);
+            }
+    
 
         });
 

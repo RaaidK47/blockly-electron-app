@@ -33,7 +33,7 @@ async def process_csv():
     async with websockets.connect(websocket_uri) as websocket:
         
         # Send status: CSV processing started
-        await send_status(websocket, "Processing CSV Started")
+        # await send_status(websocket, "Processing CSV Started")
 
         try:
 
@@ -56,6 +56,7 @@ async def process_csv():
                     increment = row['Increment']
                     tableName = row['Table Name']
 
+                    block_status = "success"  # Default status for each block
 
                     try:
                         if block_type == 'math_arithmetic':
@@ -66,10 +67,15 @@ async def process_csv():
                             try:
                                 result = handle_database_fetch(db_cursor, tableName)
                                 output.append(f"Database Fetch: {result}")
+                                if result:
+                                    block_status = "success"
+                                else:
+                                    block_status = "error"
 
                             except Exception as e:
                                 print(f"Error fetching from database: {e}")
                                 output.append(f"Error fetching from database: {e}")
+                                block_status = "error"  # Mark as error if database fetch fails
 
                         elif block_type == 'controls_if' or block_type == 'logic_compare':
                             
@@ -77,6 +83,11 @@ async def process_csv():
                             condition = f"{param_a} {operator} {param_b}"
                         
                             output.append(f"The Condtion '{condition}' is {result}")  
+
+                            if result:
+                                block_status = "success"
+                            else:
+                                block_status = "error"
 
                             # await send_message(f"The Condtion '{condition}' is {result}")                    
 
@@ -87,6 +98,10 @@ async def process_csv():
 
                     except Exception as e:
                         output.append(f"Error processing block '{block_type}': {e}")
+                        block_status = "error"  # Mark as error if any block processing fails
+
+                    # Send block status after processing each block
+                    await send_status(websocket, f"BlockID: {row['Block ID']}, Block Status: {block_status}")
             
 
                 if db_cursor:
@@ -133,7 +148,7 @@ def handle_database_fetch(cursor, tableName):
         result = cursor.fetchall()
         return result
     except Exception as e:
-        return f"Database error: {e}"
+        return False
 
 # Handle if-else logic
 def handle_if_else(x,y,operator):

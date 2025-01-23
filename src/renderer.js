@@ -13,7 +13,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (message instanceof Uint8Array) {
             // Decode the Uint8Array to a string
             const decodedMessage = new TextDecoder().decode(message);
-            console.log('Received WebSocket message from main process:', decodedMessage);
+            console.log('WebSocket Message:', decodedMessage);
         }
     });
 
@@ -74,6 +74,21 @@ window.addEventListener('DOMContentLoaded', () => {
             this.setHelpUrl(""); // Optional help URL
         }
     };
+
+    // Listen for block status messages from the main process
+    window.electron.ipcRenderer.on('block-status', (event, { blockId, status }) => {
+        const block = Blockly.getMainWorkspace().getBlockById(blockId); // Find the block by ID
+        
+        if (block) {
+            // Update block color based on status
+            if (status === 'success') {
+                block.setColour(120); // Green color for success (You can choose any color you like)
+            } else if (status === 'error') {
+                block.setColour(0); // Red color for error
+            }
+        }
+        console.log(`Block ${blockId} status: ${status}`)
+    });
 
      // Function to generate CSV from Blockly workspace
      function saveBlocklyToCSV() {
