@@ -1,42 +1,6 @@
 // Define output directory and python script path
 const OUTPUT_DIR = './csv_output';
 
-function connectWebSocket() {
-    socket = new WebSocket('ws://localhost:8765');
-
-    socket.addEventListener('open', () => {
-        console.log('Connected to Python WebSocket server');
-    });
-
-    socket.addEventListener('message', (event) => {
-        console.log('Message from server:', event.data);
-
-        const messageContainer = document.getElementById('messages');
-        const messageElement = document.createElement('div');
-        messageElement.textContent = `From Python: ${event.data}`;
-        messageContainer.appendChild(messageElement);
-    });
-
-    socket.addEventListener('error', (event) => {
-        console.error('WebSocket error:', event);
-    });
-
-    socket.addEventListener('close', (event) => {
-        console.log('WebSocket connection closed', event);
-
-        // Retry logic if connection fails
-        if (retries < maxRetries) {
-            retries++;
-            console.log(`Retrying connection... (Attempt ${retries})`);
-            setTimeout(connectWebSocket, retryDelay);
-        } else {
-            console.log('Max retry attempts reached');
-        }
-    });
-}
-
-// Try to connect when the renderer script is loaded
-window.addEventListener('load', connectWebSocket);
 
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -155,7 +119,30 @@ window.addEventListener('DOMContentLoaded', () => {
             });
     }
 
+    // Establish a WebSocket connection
+    const socket = new WebSocket('ws://localhost:8765');
 
+    // Listen for incoming messages
+    socket.onmessage = (event) => {
+        console.log(`Received message from WebSocket server: ${event.data}`);
+        // Update the UI to display the received message
+        const outputElement = document.getElementById('output');
+        if (outputElement) {
+            outputElement.innerText += `\n${event.data}`;
+        }
+    };
+
+    socket.onopen = () => {
+        console.log('Connected to WebSocket server');
+    };
+
+    socket.onerror = (error) => {
+        console.error('Error occurred while connecting to WebSocket server:', error);
+    };
+
+    socket.onclose = () => {
+        console.log('Disconnected from WebSocket server');
+    };
 
     // Handle Compile Button Click
     compileButton.addEventListener('click', () => {

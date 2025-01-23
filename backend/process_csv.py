@@ -1,11 +1,10 @@
 import csv
 import tkinter as tk
 import mysql.connector
-from tkinter import messagebox
+# from tkinter import messagebox
 import asyncio
 import websockets
-import json
-import threading
+from websocket_server import send_message
 
 # MySQL database connection setup
 def connect_to_database():
@@ -26,24 +25,6 @@ async def process_csv():
     # Path to the CSV file
     file_path = './csv_output/blockly_output.csv'
     output = []
-
-    uri = "ws://localhost:8765"
-            
-    message = "Hello, the Python Process is Completed"
-    
-    try:
-        async with websockets.connect(uri) as websocket:
-            # Send a message to the WebSocket server
-            if websocket:
-                # print("Connected to WebSocket server")
-                await websocket.send("Message Sent from Process_CSV.py")
-            else:
-                print("Failed to connect to WebSocket server")
-
-    except Exception as e:
-        print(f"Error connecting to WebSocket server: {e}")
-        output.append(f"Error connecting to WebSocket server: {e}")
-
 
     try:
 
@@ -86,13 +67,14 @@ async def process_csv():
                         result, operator = handle_if_else(param_a, param_b, operation)
                         condition = f"{param_a} {operator} {param_b}"
                     
-                        output.append(f"The Condtion '{condition}' is {result}")                      
+                        output.append(f"The Condtion '{condition}' is {result}")  
+
+                        await send_message(f"The Condtion '{condition}' is {result}")                    
 
                     elif block_type == 'controls_for':
                         result = handle_for_loop(fromValue, toValue, increment)
                         output.append(f"For Loop Result: {result}")
-                        
-                    
+                                   
 
                 except Exception as e:
                     output.append(f"Error processing block '{block_type}': {e}")
@@ -103,15 +85,12 @@ async def process_csv():
             if db_connection:
                 db_connection.close()
 
-
-
     except Exception as e:
         print(f"Error processing CSV: {e}")
         output.append(f"Error processing CSV: {e}")
 
     display_output(output)
 
-    
 
 # Handle math operations
 def handle_math_operation(operation, a, b):

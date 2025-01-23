@@ -1,6 +1,9 @@
 import asyncio
 import websockets
 
+# Set the WebSocket server URL
+WEBSOCKET_SERVER_URL = "ws://localhost:8765"
+
 # Handle incoming WebSocket connections
 async def handle_connection(websocket, path):
     print("New connection established.")
@@ -16,6 +19,11 @@ async def handle_connection(websocket, path):
                 message = await websocket.recv()
                 print(f"Received message: {message}")
 
+                # Send a response back to the client
+                response = f"Server received your message: {message}"
+                await websocket.send(response)
+                print(f"Sent response to the client: {response}")
+
             except websockets.exceptions.ConnectionClosed:
                 print("Client disconnected.")
                 break  # Exit the loop if the client disconnects
@@ -25,6 +33,24 @@ async def handle_connection(websocket, path):
 
     finally:
         print("Connection closed.")
+
+# Function to send a message to the WebSocket client
+async def send_message(message):
+    """
+    Send a message to the WebSocket client.
+
+    Args:
+        message (str): The message to be sent.
+
+    Returns:
+        None
+    """
+    try:
+        async with websockets.connect(WEBSOCKET_SERVER_URL) as websocket:
+            await websocket.send(message)
+            print(f"Message sent: {message}")
+    except Exception as e:
+        print(f"Error sending message: {e}")
 
 # Main function to start the WebSocket server
 async def main():
