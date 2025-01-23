@@ -7,6 +7,16 @@ window.addEventListener('DOMContentLoaded', () => {
     const runButton = document.getElementById('runButton');
     const blocklyDiv = document.getElementById('blocklyDiv');
 
+    // Access ipcRenderer through window.electron
+    window.electron.ipcRenderer.on('ws-message', (event, message) => {
+        // Check if the message is a Uint8Array (binary data)
+        if (message instanceof Uint8Array) {
+            // Decode the Uint8Array to a string
+            const decodedMessage = new TextDecoder().decode(message);
+            console.log('Received WebSocket message from main process:', decodedMessage);
+        }
+    });
+
     // Inject Blockly workspace into the div
     const workspace = Blockly.inject(blocklyDiv, {
         toolbox: `
@@ -117,106 +127,14 @@ window.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    
-
     // Handle Compile Button Click
     compileButton.addEventListener('click', () => {
         saveBlocklyToCSV();
     });
 
-    // Function to initialize WebSocket
-    function initializeWebSocket() {
-        const socket = new WebSocket("ws://localhost:8765");
-
-        socket.onopen = () => {
-            console.log("WebSocket connected!");
-            socket.send("Hello from JavaScript!");
-        };
-
-        socket.onmessage = (event) => {
-            console.log("Message from server:", event.data);
-        };
-
-        socket.onerror = (error) => {
-            console.error("WebSocket error:", error);
-        };
-
-        socket.onclose = () => {
-            console.log("WebSocket closed.");
-            const command = 'python backend/websocket_close.py';
-
-            window.electron.execCommand(command)
-            .then(stdout => {
-                // console.log('Python Script Output:', stdout);
-
-                // alert(`Python Script Executed Successfully:\n${stdout}`);
-                // alert(`Python Script Executed Successfully`);
-            })
-            .catch(err => {
-                console.error('Error executing script:', err);
-                alert(`Error executing script:\n${err}`);
-            });
-
-        };
-
-        // setInterval(() => {
-        //     socket.send("ping");
-        // }, 10000);
-
-    }
-
-    // Create Socket Funtion
-    function createSocket() {
-        const socket = new WebSocket("ws://localhost:8765");
-
-        socket.onopen = () => {
-            console.log("WebSocket connected!");
-            socket.send("Hello from JavaScript!");
-        };
-
-        socket.onmessage = (event) => {
-            console.log("Message from server:", event.data);
-        };
-
-        socket.onerror = (error) => {
-            console.error("WebSocket error:", error);
-        };
-
-        socket.onclose = () => {
-            console.log("WebSocket closed.");
-            const command = 'python backend/websocket_close.py';
-
-            window.electron.execCommand(command)
-            .then(stdout => {
-                // console.log('Python Script Output:', stdout);
-
-                // alert(`Python Script Executed Successfully:\n${stdout}`);
-                // alert(`Python Script Executed Successfully`);
-            })
-            .catch(err => {
-                console.error('Error executing script:', err);
-                alert(`Error executing script:\n${err}`);
-            });
-
-        };
-
-        // setInterval(() => {
-        //     socket.send("ping");
-        // }, 10000);
-
-    }
-
-    // Initialize WebSocket connection immediately
-    // createSocket();
-
     // Handle Run Button Click (Execute Python Script)
     runButton.addEventListener('click', () => {
         const command = 'python ./backend/process_csv.py';
-
-        // // Listen for messages from the main process
-        // window.electron.ipcRenderer.on('main-message', (event, message) => {
-        //     console.log('Received message from main process:', message);
-        // });
 
         window.electron.execCommand(command)
             .then(stdout => {
@@ -230,8 +148,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 alert(`Error executing script:\n${err}`);
             });  
     });
-
-    
     
 });
 

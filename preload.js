@@ -3,6 +3,13 @@ const path = require('path');
 const { contextBridge , ipcRenderer} = require('electron');
 
 contextBridge.exposeInMainWorld('electron', {
+    ipcRenderer: {
+        on: (channel, listener) => ipcRenderer.on(channel, listener),
+        send: (channel, message) => ipcRenderer.send(channel, message),
+        once: (channel, listener) => ipcRenderer.once(channel, listener),
+        removeListener: (channel, listener) => ipcRenderer.removeListener(channel, listener)
+    },
+
     saveCSV: (csvContent, filePath) => {
         return new Promise((resolve, reject) => {
             fs.writeFile(filePath, csvContent, (err) => {
@@ -35,5 +42,5 @@ contextBridge.exposeInMainWorld('electron', {
 
     getPath: () => path, // Expose the entire path module
 
-    ipcRenderer: ipcRenderer,
+   
 });

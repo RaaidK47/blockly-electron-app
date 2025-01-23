@@ -45,10 +45,6 @@ function createWindow() {
 
 }
 
-// Function to send message to renderer process
-function sendMessageToRenderer(message) {
-    mainWindow.webContents.send('main-message', message);
-}
 
 // Start WebSocket server
 function startWebSocketServer() {
@@ -63,8 +59,12 @@ function startWebSocketServer() {
         // Handle incoming messages from the client
         ws.on('message', (message) => {
             console.log(`Received message: ${message}`);
-            // Example usage:
-            sendMessageToRenderer(message);
+            
+            // Forward the WebSocket message to the renderer process
+            if (mainWindow) {
+                mainWindow.webContents.send('ws-message', message);
+            }
+
         });
 
         // Handle client disconnection
