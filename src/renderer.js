@@ -2,7 +2,6 @@
 const OUTPUT_DIR = './csv_output';
 
 
-
 window.addEventListener('DOMContentLoaded', () => {
     const compileButton = document.getElementById('compileButton');
     const runButton = document.getElementById('runButton');
@@ -72,33 +71,32 @@ window.addEventListener('DOMContentLoaded', () => {
         const xml = Blockly.Xml.workspaceToDom(workspace); // Get XML from workspace
         const blocks = xml.getElementsByTagName('block');
 
-        const rows = [['Block Type', 'Operation', 'Parameter A', 'Parameter B', 'From', 'To', 'Increment', 'Table Name']]; // Header row
+        const rows = [['Block ID', 'Block Type', 'Operation', 'Parameter A', 'Parameter B', 'From', 'To', 'Increment', 'Table Name']]; // Header row
         
         Array.from(blocks).forEach((block) => {
+            const blockId = block.getAttribute('id'); // Get the Block ID
             const blockType = block.getAttribute('type');
 
             if (blockType === 'logic_compare' || blockType === 'math_arithmetic'){
                 const operation = block.querySelector('field[name="OP"]')?.textContent || '';
                 const paramA = block.querySelector('field[name="NUM"]')?.textContent || '';
                 const paramB = block.querySelector('value[name="B"] field[name="NUM"]')?.textContent || '';
-                rows.push([blockType, operation, paramA, paramB]);
+                rows.push([blockId, blockType, operation, paramA, paramB]);
             }
 
             else if (blockType === 'controls_for'){
                 const fromValue = block.getElementsByTagName("value")[0].getElementsByTagName("block")[0].getElementsByTagName("field")[0].textContent; // Get 'FROM' value
                 const toValue = block.getElementsByTagName("value")[1].getElementsByTagName("block")[0].getElementsByTagName("field")[0].textContent; // Get 'TO' value
                 const byValue = block.getElementsByTagName("value")[2].getElementsByTagName("block")[0].getElementsByTagName("field")[0].textContent; // Get 'BY' value
-                rows.push([blockType, null, null, null, fromValue, toValue, byValue]);
+                rows.push([blockId, blockType, null, null, null, fromValue, toValue, byValue]);
             }
             
             else if (blockType === 'fetch_from_database') {
                 // Extract database parameters
                 const tableName = block.querySelector('field[name="TABLE"]')?.textContent || 'unknown_table';
-                rows.push([blockType, null, null, null, null, null, null, tableName]);
+                rows.push([blockId, blockType, null, null, null, null, null, null, tableName]);
             }
         });
-
-
 
         // Convert to CSV format (adjust this as needed)
         const csvContent = rows.map((row) => row.join(',')).join('\n');
@@ -119,45 +117,110 @@ window.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    // Establish a WebSocket connection
-    const socket = new WebSocket('ws://localhost:8765');
-
-    // Listen for incoming messages
-    socket.onmessage = (event) => {
-        console.log(`Received message from WebSocket server: ${event.data}`);
-        // Update the UI to display the received message
-        const outputElement = document.getElementById('output');
-        if (outputElement) {
-            outputElement.innerText += `\n${event.data}`;
-        }
-    };
-
-    socket.onopen = () => {
-        console.log('Connected to WebSocket server');
-    };
-
-    socket.onerror = (error) => {
-        console.error('Error occurred while connecting to WebSocket server:', error);
-    };
-
-    socket.onclose = () => {
-        console.log('Disconnected from WebSocket server');
-    };
+    
 
     // Handle Compile Button Click
     compileButton.addEventListener('click', () => {
         saveBlocklyToCSV();
     });
 
-    
+    // Function to initialize WebSocket
+    function initializeWebSocket() {
+        const socket = new WebSocket("ws://localhost:8765");
+
+        socket.onopen = () => {
+            console.log("WebSocket connected!");
+            socket.send("Hello from JavaScript!");
+        };
+
+        socket.onmessage = (event) => {
+            console.log("Message from server:", event.data);
+        };
+
+        socket.onerror = (error) => {
+            console.error("WebSocket error:", error);
+        };
+
+        socket.onclose = () => {
+            console.log("WebSocket closed.");
+            const command = 'python backend/websocket_close.py';
+
+            window.electron.execCommand(command)
+            .then(stdout => {
+                // console.log('Python Script Output:', stdout);
+
+                // alert(`Python Script Executed Successfully:\n${stdout}`);
+                // alert(`Python Script Executed Successfully`);
+            })
+            .catch(err => {
+                console.error('Error executing script:', err);
+                alert(`Error executing script:\n${err}`);
+            });
+
+        };
+
+        // setInterval(() => {
+        //     socket.send("ping");
+        // }, 10000);
+
+    }
+
+    // Create Socket Funtion
+    function createSocket() {
+        const socket = new WebSocket("ws://localhost:8765");
+
+        socket.onopen = () => {
+            console.log("WebSocket connected!");
+            socket.send("Hello from JavaScript!");
+        };
+
+        socket.onmessage = (event) => {
+            console.log("Message from server:", event.data);
+        };
+
+        socket.onerror = (error) => {
+            console.error("WebSocket error:", error);
+        };
+
+        socket.onclose = () => {
+            console.log("WebSocket closed.");
+            const command = 'python backend/websocket_close.py';
+
+            window.electron.execCommand(command)
+            .then(stdout => {
+                // console.log('Python Script Output:', stdout);
+
+                // alert(`Python Script Executed Successfully:\n${stdout}`);
+                // alert(`Python Script Executed Successfully`);
+            })
+            .catch(err => {
+                console.error('Error executing script:', err);
+                alert(`Error executing script:\n${err}`);
+            });
+
+        };
+
+        // setInterval(() => {
+        //     socket.send("ping");
+        // }, 10000);
+
+    }
+
+    // Initialize WebSocket connection immediately
+    // createSocket();
+
     // Handle Run Button Click (Execute Python Script)
     runButton.addEventListener('click', () => {
         const command = 'python ./backend/process_csv.py';
 
+        // // Listen for messages from the main process
+        // window.electron.ipcRenderer.on('main-message', (event, message) => {
+        //     console.log('Received message from main process:', message);
+        // });
 
         window.electron.execCommand(command)
             .then(stdout => {
-                console.log('Python Script Output:', stdout);
+                // console.log('Python Script Output:', stdout);
 
                 // alert(`Python Script Executed Successfully:\n${stdout}`);
                 alert(`Python Script Executed Successfully`);
@@ -165,6 +228,10 @@ window.addEventListener('DOMContentLoaded', () => {
             .catch(err => {
                 console.error('Error executing script:', err);
                 alert(`Error executing script:\n${err}`);
-            });
+            });  
     });
+
+    
+    
 });
+

@@ -4,7 +4,7 @@ import mysql.connector
 # from tkinter import messagebox
 import asyncio
 import websockets
-from websocket_server import send_message
+
 
 # MySQL database connection setup
 def connect_to_database():
@@ -26,71 +26,87 @@ async def process_csv():
     file_path = './csv_output/blockly_output.csv'
     output = []
 
-    try:
-
-        db_connection = connect_to_database()
-        db_cursor = db_connection.cursor() if db_connection else None
-
-        # if(db_cursor):
-        #     print("Connected to database successfully")
-
-        with open(file_path, 'r') as file:
-            reader = csv.DictReader(file)  # Read the CSV file as a dictionary
-
-            for row in reader:
-                block_type = row['Block Type']
-                operation = row['Operation']
-                param_a = row['Parameter A']
-                param_b = row['Parameter B']
-                fromValue = row['From']
-                toValue = row['To']
-                increment = row['Increment']
-                tableName = row['Table Name']
-
-
-                try:
-                    if block_type == 'math_arithmetic':
-                        result = handle_math_operation(operation, param_a, param_b)
-                        output.append(f"Math Operation ({operation}): {result}")
-                    
-                    elif block_type == 'fetch_from_database' and db_cursor:
-                        try:
-                            result = handle_database_fetch(db_cursor, tableName)
-                            output.append(f"Database Fetch: {result}")
-
-                        except Exception as e:
-                            print(f"Error fetching from database: {e}")
-                            output.append(f"Error fetching from database: {e}")
-
-                    elif block_type == 'controls_if' or block_type == 'logic_compare':
-                        
-                        result, operator = handle_if_else(param_a, param_b, operation)
-                        condition = f"{param_a} {operator} {param_b}"
-                    
-                        output.append(f"The Condtion '{condition}' is {result}")  
-
-                        await send_message(f"The Condtion '{condition}' is {result}")                    
-
-                    elif block_type == 'controls_for':
-                        result = handle_for_loop(fromValue, toValue, increment)
-                        output.append(f"For Loop Result: {result}")
-                                   
-
-                except Exception as e:
-                    output.append(f"Error processing block '{block_type}': {e}")
+    # WebSocket URI (Assume you have a WebSocket server running at localhost:8765)
+    websocket_uri = "ws://localhost:8765"
+    
+    # Connect to the WebSocket server
+    async with websockets.connect(websocket_uri) as websocket:
         
+        # Send status: CSV processing started
+        await send_status(websocket, "Processing CSV Started")
 
-            if db_cursor:
-                db_cursor.close()
-            if db_connection:
-                db_connection.close()
+        try:
 
+            db_connection = connect_to_database()
+            db_cursor = db_connection.cursor() if db_connection else None
+
+            # if(db_cursor):
+            #     print("Connected to database successfully")
+
+            with open(file_path, 'r') as file:
+                reader = csv.DictReader(file)  # Read the CSV file as a dictionary
+
+                for row in reader:
+                    block_type = row['Block Type']
+                    operation = row['Operation']
+                    param_a = row['Parameter A']
+                    param_b = row['Parameter B']
+                    fromValue = row['From']
+                    toValue = row['To']
+                    increment = row['Increment']
+                    tableName = row['Table Name']
+
+
+                    try:
+                        if block_type == 'math_arithmetic':
+                            result = handle_math_operation(operation, param_a, param_b)
+                            output.append(f"Math Operation ({operation}): {result}")
+                        
+                        elif block_type == 'fetch_from_database' and db_cursor:
+                            try:
+                                result = handle_database_fetch(db_cursor, tableName)
+                                output.append(f"Database Fetch: {result}")
+
+                            except Exception as e:
+                                print(f"Error fetching from database: {e}")
+                                output.append(f"Error fetching from database: {e}")
+
+                        elif block_type == 'controls_if' or block_type == 'logic_compare':
+                            
+                            result, operator = handle_if_else(param_a, param_b, operation)
+                            condition = f"{param_a} {operator} {param_b}"
+                        
+                            output.append(f"The Condtion '{condition}' is {result}")  
+
+                            # await send_message(f"The Condtion '{condition}' is {result}")                    
+
+                        elif block_type == 'controls_for':
+                            result = handle_for_loop(fromValue, toValue, increment)
+                            output.append(f"For Loop Result: {result}")
+                                    
+
+                    except Exception as e:
+                        output.append(f"Error processing block '{block_type}': {e}")
+            
+
+                if db_cursor:
+                    db_cursor.close()
+                if db_connection:
+                    db_connection.close()
+
+        except Exception as e:
+            print(f"Error processing CSV: {e}")
+            output.append(f"Error processing CSV: {e}")
+
+        display_output(output)
+
+# Function to send status updates over WebSocket
+async def send_status(websocket, message):
+    try:
+        # Send the message (status update) via WebSocket
+        await websocket.send(message)
     except Exception as e:
-        print(f"Error processing CSV: {e}")
-        output.append(f"Error processing CSV: {e}")
-
-    display_output(output)
-
+        print(f"Error sending message via WebSocket: {e}")
 
 # Handle math operations
 def handle_math_operation(operation, a, b):

@@ -1,8 +1,13 @@
 import asyncio
 import websockets
 
-# Set the WebSocket server URL
-WEBSOCKET_SERVER_URL = "ws://localhost:8765"
+import nest_asyncio
+
+# Enable nested asyncio event loops
+nest_asyncio.apply()
+
+# Store the active WebSocket connections
+active_connections = set()
 
 # Handle incoming WebSocket connections
 async def handle_connection(websocket, path):
@@ -10,23 +15,25 @@ async def handle_connection(websocket, path):
     try:
         # Send a welcome message when a client connects
         await websocket.send("Welcome to the WebSocket server!")
-        print("Sent welcome message to the client.")
-
+        await websocket.send(str(active_connections))
+        # print("Sent welcome message to the client.")
+        # send_message("Test Message")
         # Continuously listen for messages from the client
         while True:
             try:
-                # Wait for a message from the client
-                message = await websocket.recv()
-                print(f"Received message: {message}")
-
-                # Send a response back to the client
-                response = f"Server received your message: {message}"
-                await websocket.send(response)
-                print(f"Sent response to the client: {response}")
+                pass
+                # # Wait for a message from the client
+                # message = await websocket.recv()
+                # print(f"Received message: {message}")
 
             except websockets.exceptions.ConnectionClosed:
                 print("Client disconnected.")
                 break  # Exit the loop if the client disconnects
+
+            # Send a message to the client every 5 minutes
+            await asyncio.sleep(300)  # 300 seconds = 5 minutes
+            await websocket.send("Hello from the server!")
+            print("Sent periodic message to the client.")
 
     except Exception as e:
         print(f"Error: {e}")
@@ -34,24 +41,22 @@ async def handle_connection(websocket, path):
     finally:
         print("Connection closed.")
 
-# Function to send a message to the WebSocket client
+# Function to send a message to all active WebSocket clients
 async def send_message(message):
-    """
-    Send a message to the WebSocket client.
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    await _send_message(message)
+    loop.close()
 
-    Args:
-        message (str): The message to be sent.
+async def _send_message(message):
+    for connection in active_connections:
+        try:
+            await connection.send(message)
+            print(f"Sent message to client: {message}")
+        except Exception as e:
+            print(f"Error sending message to client: {e}")
 
-    Returns:
-        None
-    """
-    try:
-        async with websockets.connect(WEBSOCKET_SERVER_URL) as websocket:
-            await websocket.send(message)
-            print(f"Message sent: {message}")
-    except Exception as e:
-        print(f"Error sending message: {e}")
-
+            
 # Main function to start the WebSocket server
 async def main():
     # Set the ping timeout and interval to ensure the connection stays alive

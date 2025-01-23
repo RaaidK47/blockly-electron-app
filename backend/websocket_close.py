@@ -22,9 +22,11 @@ def kill_processes(pids):
             proc.terminate()
             print(f"Process {pid} terminated.")
         except psutil.NoSuchProcess:
-            print(f"Process {pid} not found.")
+            # print(f"Process {pid} not found.")
+            pass
         except Exception as e:
-            print(f"Error killing process {pid}: {e}")
+            pass
+            # print(f"Error killing process {pid}: {e}")
 
 port = 8765
 output, pids_to_kill = get_netstat_output(port)

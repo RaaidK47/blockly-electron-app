@@ -1,8 +1,11 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
+const WebSocket = require('ws'); // Import WebSocket package
 
 let pythonProcess = null;
+let wss = null; // WebSocket server instance
+let mainWindow = null;
 
 function createWindow() {
     const win = new BrowserWindow({
@@ -18,23 +21,66 @@ function createWindow() {
 
     win.loadFile('src/index.html');
 
-    // Launch the Python script to Start Websocket Server when the window is created
-    pythonProcess = exec('python backend/websocket_server.py');
+    // Store the mainWindow reference
+    mainWindow = win;
 
-    // Handle the Python script's output
-    pythonProcess.stdout.on('data', (data) => {
-        console.log(`Python Output: ${data}`);
-    });
+    // You can now start the WebSocket server when the window is created
+    startWebSocketServer();
 
-    pythonProcess.stderr.on('data', (data) => {
-        console.error(`Python Error: ${data}`);
-    });
+    // // Launch the Python script to Start Websocket Server when the window is created
+    // pythonProcess = exec('python backend/websocket_server.py');
 
-    pythonProcess.on('close', (code) => {
-        console.log(`Python process exited with code ${code}`);
-    });
+    // // Handle the Python script's output
+    // pythonProcess.stdout.on('data', (data) => {
+    //     console.log(`Python Output: ${data}`);
+    // });
+
+    // pythonProcess.stderr.on('data', (data) => {
+    //     console.error(`Python Error: ${data}`);
+    // });
+
+    // pythonProcess.on('close', (code) => {
+    //     console.log(`Python process exited with code ${code}`);
+    // });
 
 }
+
+// Function to send message to renderer process
+function sendMessageToRenderer(message) {
+    mainWindow.webContents.send('main-message', message);
+}
+
+// Start WebSocket server
+function startWebSocketServer() {
+    wss = new WebSocket.Server({ port: 8765 });
+
+    wss.on('connection', (ws) => {
+        console.log('WebSocket client connected');
+        
+        // Send a welcome message when a client connects
+        ws.send('Welcome to the WebSocket server!');
+
+        // Handle incoming messages from the client
+        ws.on('message', (message) => {
+            console.log(`Received message: ${message}`);
+            // Example usage:
+            sendMessageToRenderer(message);
+        });
+
+        // Handle client disconnection
+        ws.on('close', () => {
+            console.log('WebSocket client disconnected');
+        });
+
+        // Handle errors
+        ws.on('error', (error) => {
+            console.error('WebSocket error:', error);
+        });
+    });
+
+    console.log('WebSocket server running on ws://localhost:8765');
+}
+
 
 // App initialization
 app.whenReady().then(() => {
@@ -80,3 +126,11 @@ ipcMain.handle('execute-command', async (event, command) => {
         });
     });
 });
+
+// ipcMain.on('websocket-message', (event, message) => {
+//     // Handle the incoming message
+//     console.log('Received message from renderer:', message);
+
+//     // Send a response back to the renderer
+//     event.sender.send('websocket-message', 'Hello from main process!');
+// });

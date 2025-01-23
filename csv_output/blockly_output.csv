@@ -1,4 +1,2 @@
-Block Type,Operation,Parameter A,Parameter B,From,To,Increment,Table Name
-fetch_from_database,,,,,,,test_table
-logic_compare,LT,30,60
-math_arithmetic,ADD,60,15
+Block ID,Block Type,Operation,Parameter A,Parameter B,From,To,Increment,Table Name
+EP7jxRf~#g#+.SzdXx+x,logic_compare,LT,30,60

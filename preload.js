@@ -33,5 +33,7 @@ contextBridge.exposeInMainWorld('electron', {
 
     execCommand: (command) => ipcRenderer.invoke('execute-command', command),
 
-    getPath: () => path // Expose the entire path module
+    getPath: () => path, // Expose the entire path module
+
+    ipcRenderer: ipcRenderer,
 });
