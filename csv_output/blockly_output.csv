@@ -1,4 +1,3 @@
 Block ID,Block Type,Operation,Parameter A,Parameter B,From,To,Increment,Table Name
-Kq.3JnsibOSyGUpLHz8s,math_arithmetic,ADD,6,3
-dFo-=:DsER.SK2p#Ht9y,fetch_from_database,,,,,,,test_table
-Fsaa^RayeGwteAOHon9I,logic_compare,EQ,6,6
+T3IY}YXi7{tGdq(BhalY,logic_compare,GT,10,20
+]j(DRCHh.i%|%@qbyz5*,fetch_from_database,,,,,,,no_table
