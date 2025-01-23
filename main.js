@@ -24,25 +24,8 @@ function createWindow() {
     // Store the mainWindow reference
     mainWindow = win;
 
-    // You can now start the WebSocket server when the window is created
+    // Start the WebSocket server when the window is created
     startWebSocketServer();
-
-    // // Launch the Python script to Start Websocket Server when the window is created
-    // pythonProcess = exec('python backend/websocket_server.py');
-
-    // // Handle the Python script's output
-    // pythonProcess.stdout.on('data', (data) => {
-    //     console.log(`Python Output: ${data}`);
-    // });
-
-    // pythonProcess.stderr.on('data', (data) => {
-    //     console.error(`Python Error: ${data}`);
-    // });
-
-    // pythonProcess.on('close', (code) => {
-    //     console.log(`Python process exited with code ${code}`);
-    // });
-
 }
 
 
@@ -154,11 +137,3 @@ ipcMain.handle('execute-command', async (event, command) => {
         });
     });
 });
-
-// ipcMain.on('websocket-message', (event, message) => {
-//     // Handle the incoming message
-//     console.log('Received message from renderer:', message);
-
-//     // Send a response back to the renderer
-//     event.sender.send('websocket-message', 'Hello from main process!');
-// });
